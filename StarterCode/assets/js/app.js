@@ -3,7 +3,7 @@ function makeResponsive() {
     // Set the SVG area when the page loads,
     var svgsection = svg.select("#scatter").select("graphic");
 
-    if (!svgsection.empty()) {
+    if (svgsection.empty()) {
         svgsection.remove();
     }
 
