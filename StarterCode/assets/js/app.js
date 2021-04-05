@@ -1,13 +1,13 @@
 function makeResponsive() {
 
     // Set the SVG area when the page loads,
-    var svgsection = svg.select("#scatter").select("graphic");
+    var svgsection = d3.select("#scatter").select("svg");
 
     if (svgsection.empty()) {
         svgsection.remove();
     }
 
-    // Height and width of SVG
+    // Dimensions of grapgh
     var graphic_height = window.innerHeight * 0.9;
     var graphic_width = window.innerWidth * 0.8;
 
@@ -19,27 +19,28 @@ function makeResponsive() {
         left: 100
     };
 
-    // Dimensions of grapgh
+    // Calculate the width and height of the graph
     var width = graphic_width - margin.left - margin.right;
     var height = graphic_height - margin.top - margin.bottom;
 
+
     // SVG wrapper
-    var graphic = svg
+    var svg = d3
         .select("#scatter")
-        .append("graphic")
+        .append("svg")
         .attr("width", graphic_width)
         .attr("height", graphic_height);
 
-    // SVG append
-    var chart_gr = graphic.append("g")
+    // SVG Append
+    var chart_gr = svg.append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
     // Beginning axis
-    var X_axis = "poverty";
-    var Y_axis = "healthcare";
+    var theXaxis = "poverty";
+    var theYaxis = "healthcare";
 
-    // Import CSV data
-    svg.csv("assets/data/data.csv", function(error, healthcare_info) {
+    // Import CSV
+    d3.csv("assets/data/data.csv", function(error, healthcare_info) {
         if (error) return console.warn(error);
 
         healthcare_info.forEach(function(data) {
@@ -52,109 +53,110 @@ function makeResponsive() {
         });
 
         // Create scale functions for x and y axis
-        var xScale = xScale(healthcare_info, X_axis);
-        var yScale = yScale(healthcare_info, Y_axis);
+        var theXscale = xScale(healthcare_info, theXaxis);
+        var theYscale = yScale(healthcare_info, theYaxis);
 
 
         // Create initial axis functions
-        var initialX = svg.axisBottom(xScale);
-        var initialY = svg.axisLeft(yScale);
+        var initialXaxis = d3.axisBottom(theXscale);
+        var initialYaxis = d3.axisLeft(theYscale);
 
         // Append the axis to the chart
         var xAxis = chart_gr.append("g")
             .classed("chart", true)
             .attr("transform", `translate(0, ${height})`)
-            .call(initialX);
+            .call(initialXaxis);
 
         var yAxis = chart_gr.append("g")
             .classed("chart", true)
-            .call(initialY);
+            .call(initialYaxis);
 
 
         // Create the bubbles
-        var bubbles = chart_gr.selectAll("bubble")
+        var bubblegroup = chart_gr.selectAll("circle")
             .data(healthcare_info)
             .enter()
-            .append("bubble")
-            .attr("cx", d => xScale(d[X_axis]))
-            .attr("cy", d => yScale(d[Y_axis]))
+            .append("circle")
+            .attr("cx", d => theXscale(d[theXaxis]))
+            .attr("cy", d => theYscale(d[theYaxis]))
             .attr("r", 17)
-            .classed("StateBubble", true)
+            .classed("stateCircle", true)
             .attr("stroke-width", "3")
-            .attr("opacity", ".7")
+            .attr("opacity", ".8")
             // Mouseover
             .on("mouseover", function() {
-                svg.select(any)
+                d3.select(this)
                     .transition()
                     .duration(1000);
             })
-            // Mouseout
+            // Mouse out
             .on("mouseout", function() {
-                svg.select(any)
+                d3.select(this)
                     .transition()
                     .duration(1000);
             });
 
-        // Add states
-        var States = chart_gr.selectAll()
+
+        // Add States
+        var state_lables = chart_gr.selectAll()
             .data(healthcare_info)
             .enter()
             .append("text")
             .classed("stateText", true)
-            .attr("x", d => xScale(d[X_axis]))
-            .attr("y", d => yScale(d[Y_axis]))
+            .attr("x", d => theXscale(d[theXaxis]))
+            .attr("y", d => theYscale(d[theYaxis]))
             .text(d => d.abbr)
             .attr("dy", 5)
-            .attr("opacity", ".7");
+            .attr("opacity", ".8");
 
 
         // X labels to select from
-        var X_labels = chart_gr.append("g")
+        var XlabelsGroup = chart_gr.append("g")
             .attr("transform", `translate(${width / 2}, ${height + 20})`)
             .classed("aText", true);
 
-        var poverty_label = X_labels.append("text")
+        var poverty_label = XlabelsGroup.append("text")
             .attr("x", 0)
             .attr("y", 20)
             .attr("value", "poverty") 
             .classed("active", true)
             .text("In Poverty (%)");
 
-        var age_label = X_labels.append("text")
+        var age_label = XlabelsGroup.append("text")
             .attr("x", 0)
             .attr("y", 40)
             .attr("value", "age") 
             .classed("inactive", true)
             .text("Age (Median)");
 
-        var income_label = X_labels.append("text")
+        var income_label = XlabelsGroup.append("text")
             .attr("x", 0)
             .attr("y", 60)
             .attr("value", "income") 
             .classed("inactive", true)
             .text("Household Income (Median)");
 
-        // Y labels to select from
-        var Y_labels = chart_gr.append("g")
+         // Y labels to select from
+        var YlabelsGroup = chart_gr.append("g")
             .attr("transform", "rotate(-90)")
             .attr("dy", "1em")
             .classed("aText", true)
 
-        var obesity_label = Y_labels.append("text")
+        var obesity_label = YlabelsGroup.append("text")
             .attr("y", 0 - margin.left + 20)
             .attr("x", 0 - (height / 2))
             .attr("value", "obesity") 
             .classed("active", true)
             .text("Obesse (%)");
 
-        var smokes_label = Y_labels.append("text")
+        var smokes_label = YlabelsGroup.append("text")
             .attr("y", 0 - margin.left + 40)
             .attr("x", 0 - (height / 2))
             .attr("value", "smokes") 
             .classed("inactive", true)
             .text("Smokes (%)");
 
-        var healthcareLabel = Y_labels.append("text")
+        var healthcare_label = YlabelsGroup.append("text")
             .attr("y", 0 - margin.left + 60)
             .attr("x", 0 - (height / 2))
             .attr("value", "healthcare") 
@@ -162,30 +164,35 @@ function makeResponsive() {
             .text("Lacks Healthcare (%)");
 
         // Text in bubbles
-        var bubbles = updateToolTip(X_axis, Y_axis, bubbles);
-        var States = updateState(X_axis, Y_axis, States);
+        var bubblegroup = updateToolTip(theXaxis, theYaxis, bubblegroup);
+        var state_lables = updateToolText(theXaxis, theYaxis, state_lables);
 
         // Listener
-        X_labels.selectAll("text")
+        XlabelsGroup.selectAll("text")
             .on("click", function() {
-                
-                var value = svg.select(any).attr("value");
-                if (value !== X_axis) {
-                    X_axis = value;
+                // get value of selection
+                var value = d3.select(this).attr("value");
+                if (value !== theXaxis) {
 
-                    // Update for seleveted data
-                    xScale = xScale(healthcare_info, X_axis);
+                    
+                    theXaxis = value;
 
-                    xAxis = renderXaxis(xScale, xAxis);
+                    
+                    theXscale = xScale(healthcare_info, theXaxis);
 
-                    bubbles = renderBubbles(bubbles, xScale, X_axis, yScale, Y_axis);
-                    States = renderState(States, xScale, X_axis, yScale, Y_axis);
+                    
+                    xAxis = renderXAxes(theXscale, xAxis);
 
-                    bubbles = updateToolTip(X_axis, Y_axis, bubbles);
-                    States = updateState(X_axis, Y_axis, States);
+                    
+                    bubblegroup = renderCircles(bubblegroup, theXscale, theXaxis, theYscale, theYaxis);
+                    state_lables = renderText(state_lables, theXscale, theXaxis, theYscale, theYaxis);
+
+                    
+                    bubblegroup = updateToolTip(theXaxis, theYaxis, bubblegroup);
+                    state_lables = updateToolText(theXaxis, theYaxis, state_lables);
 
                     // Bold text based on selection
-                    if (X_axis === "poverty") {
+                    if (theXaxis === "poverty") {
                         poverty_label
                             .classed("active", true)
                             .classed("inactive", false);
@@ -195,7 +202,7 @@ function makeResponsive() {
                         income_label
                             .classed("active", false)
                             .classed("inactive", true);
-                    } else if (X_axis === "age") {
+                    } else if (theXaxis === "age") {
                         poverty_label
                             .classed("active", false)
                             .classed("inactive", true);
@@ -220,44 +227,48 @@ function makeResponsive() {
             });
 
 
-        // Y listener
-        Y_labels.selectAll("text")
+        // y listener
+        YlabelsGroup.selectAll("text")
             .on("click", function() {
-                var value = svg.select(any).attr("value");
-                if (value !== Y_axis) {
+                // get value of selection
+                var value = d3.select(this).attr("value");
+                if (value !== theYaxis) {
 
-                    Y_axis = value;
+                    
+                    theYaxis = value;
+
+                    
+                    theYscale = yScale(healthcare_info, theYaxis);
+
+                    
+                    yAxis = renderYAxes(theYscale, yAxis);
 
                     // Update for selected data
-                    yScale = yScale(healthcare_info, Y_axis);
+                    bubblegroup = renderCircles(bubblegroup, theXscale, theXaxis, theYscale, theYaxis);
+                    state_lables = renderText(state_lables, theXscale, theXaxis, theYscale, theYaxis);
 
-                    yAxis = renderYaxis(yScale, yAxis);
-
-                    bubbles = renderBubbles(bubbles, xScale, X_axis, yScale, Y_axis);
-                    States = renderState(States, xScale, X_axis, yScale, Y_axis);
-
-                    bubbles = updateToolTip(X_axis, Y_axis, bubbles);
-                    States = updateState(X_axis, Y_axis, States);
+                    bubblegroup = updateToolTip(theXaxis, theYaxis, bubblegroup);
+                    state_lables = updateToolText(theXaxis, theYaxis, state_lables);
 
                     // Bold axis that is selected
-                    if (Y_axis === "obesity") {
+                    if (theYaxis === "obesity") {
                         obesity_label
                             .classed("active", true)
                             .classed("inactive", false);
                         smokes_label
                             .classed("active", false)
                             .classed("inactive", true);
-                        healthcareLabel
+                        healthcare_label
                             .classed("active", false)
                             .classed("inactive", true);
-                    } else if (Y_axis === "smokes") {
+                    } else if (theYaxis === "smokes") {
                         obesity_label
                             .classed("active", false)
                             .classed("inactive", true);
                         smokes_label
                             .classed("active", true)
                             .classed("inactive", false);
-                        healthcareLabel
+                        healthcare_label
                             .classed("active", false)
                             .classed("inactive", true);
                     } else {
@@ -267,7 +278,7 @@ function makeResponsive() {
                         smokes_label
                             .classed("active", false)
                             .classed("inactive", true);
-                        healthcareLabel
+                        healthcare_label
                             .classed("active", true)
                             .classed("inactive", false);
                     }
@@ -276,144 +287,151 @@ function makeResponsive() {
     });
 
     // Function to udate X
-    function xScale(healthcare_info, X_axis) {
-        var xScale = svg.scaleLinear()
-            .domain([svg.min(healthcare_info, d => d[X_axis]) * 0.8,
-                svg.max(healthcare_info, d => d[X_axis]) * 1
+    function xScale(healthcare_info, theXaxis) {
+        var theXscale = d3.scaleLinear()
+            .domain([d3.min(healthcare_info, d => d[theXaxis]) * 0.8,
+                d3.max(healthcare_info, d => d[theXaxis]) * 1
             ])
             .range([0, width]);
 
-        return xScale;
+        return theXscale;
 
     }
+
 
     // Function to update Y
-    function yScale(healthcare_info, Y_axis) {
-        var yScale = svg.scaleLinear()
-            .domain([svg.min(healthcare_info, d => d[Y_axis]) * 0.8,
-                svg.max(healthcare_info, d => d[Y_axis]) * 1.1
+    function yScale(healthcare_info, theYaxis) {
+        var theYscale = d3.scaleLinear()
+            .domain([d3.min(healthcare_info, d => d[theYaxis]) * 0.8,
+                d3.max(healthcare_info, d => d[theYaxis]) * 1.1
             ])
             .range([height, 0]);
-        return yScale;
+
+        return theYscale;
 
     }
 
+
     // Function to render X
-    function renderXaxis(newXScale, xAxis) {
-        var initialX = svg.axisBottom(newXScale);
+    function renderXAxes(newXScale, xAxis) {
+        var initialXaxis = d3.axisBottom(newXScale);
         xAxis.transition()
             .duration(1000)
-            .call(initialX);
+            .call(initialXaxis);
 
         return xAxis;
     }
 
+
     // Function to render Y
-    function renderYaxis(newYScale, yAxis) {
-        var initialY = svg.axisLeft(newYScale);
+    function renderYAxes(newYScale, yAxis) {
+        var initialYaxis = d3.axisLeft(newYScale);
         yAxis.transition()
             .duration(1000)
-            .call(initialY);
+            .call(initialYaxis);
 
         return yAxis;
     }
 
-    // Update bubbles with new
-    function renderBubbles(bubbles, newXScale, X_axis, newYScale, Y_axis) {
-        bubbles.transition()
-            .duration(1000)
-            .attr("cx", d => newXScale(d[X_axis]))
-            .attr("cy", d => newYScale(d[Y_axis]));
 
-        return bubbles;
+    // Update bubbles with new
+    function renderCircles(bubblegroup, newXScale, theXaxis, newYScale, theYaxis) {
+        bubblegroup.transition()
+            .duration(1000)
+            .attr("cx", d => newXScale(d[theXaxis]))
+            .attr("cy", d => newYScale(d[theYaxis]));
+
+        return bubblegroup;
     }
 
-    // Update states
-    function renderState(States, newXScale, X_axis, newYScale, Y_axis) {
-        States.transition()
-            .duration(1000)
-            .attr("x", d => newXScale(d[X_axis]))
-            .attr("y", d => newYScale(d[Y_axis]));
 
-        return States;
+    // Update states
+    function renderText(state_lables, newXScale, theXaxis, newYScale, theYaxis) {
+        state_lables.transition()
+            .duration(1000)
+            .attr("x", d => newXScale(d[theXaxis]))
+            .attr("y", d => newYScale(d[theYaxis]));
+
+        return state_lables;
     }
 
 
     // Update bubbles
-    function updateToolTip(X_axis, Y_axis, bubbles) {
+    function updateToolTip(theXaxis, theYaxis, bubblegroup) {
 
-        if (X_axis === "poverty") {
+        if (theXaxis === "poverty") {
             var xlabel = "Poverty (%) :";
-        } else if (X_axis === "age") {
+        } else if (theXaxis === "age") {
             var xlabel = "Age:";
         } else {
             var xlabel = "Income:";
         }
 
-        if (Y_axis === "healthcare") {
-            var ylabel = "Lack Healthcare (%) :";
-        } else if (Y_axis === "smokes") {
+        if (theYaxis === "healthcare") {
+            var ylabel = "Lacks Healthcare (%) :";
+        } else if (theYaxis === "smokes") {
             var ylabel = "Smokes (%):";
         } else {
             var ylabel = "Obesse (%):";
         }
 
-        var toolTip = svg.tip()
-            .attr("class", "svg-tip")
+        var toolTip = d3.tip()
+            .attr("class", "d3-tip")
             .offset([80, -70])
             .html(function(d) {
-                return (`${d.state}<br>${xlabel} ${d[X_axis]}<br>${ylabel} ${d[Y_axis]}`);
+                return (`${d.state}<br>${xlabel} ${d[theXaxis]}<br>${ylabel} ${d[theYaxis]}`);
             });
 
-        bubbles.call(toolTip);
+        bubblegroup.call(toolTip);
 
-        bubbles.on("mouseover", function(data) {
+        bubblegroup.on("mouseover", function(data) {
                 toolTip.show(data);
             })
             .on("mouseout", function(data, index) {
                 toolTip.hide(data);
             });
 
-        return bubbles;
+        return bubblegroup;
     }
 
 
     // States
-    function updateState(X_axis, Y_axis, States) {
+    function updateToolText(theXaxis, theYaxis, state_lables) {
 
-        if (X_axis === "poverty") {
+        if (theXaxis === "poverty") {
             var xlabel = "Poverty (%) :";
-        } else if (X_axis === "age") {
+        } else if (theXaxis === "age") {
             var xlabel = "Age:";
         } else {
             var xlabel = "Income: $";
         }
 
-        if (Y_axis === "healthcare") {
-            var ylabel = "Lack Healthcare (%) :";
-        } else if (Y_axis === "smokes") {
+        if (theYaxis === "healthcare") {
+            var ylabel = "Lacks Healthcare (%) :";
+        } else if (theYaxis === "smokes") {
             var ylabel = "Smokes (%) :";
         } else {
             var ylabel = "Obesse (%):";
         }
 
-        var toolTip = svg.tip()
-            .attr("class", "svg-tip")
+        var toolTip = d3.tip()
+            .attr("class", "d3-tip")
             .offset([70, -80])
             .html(function(d) {
-                return (`<strong>${d.state}</strong><br>${xlabel} ${d[X_axis]}<br>${ylabel} ${d[Y_axis]}`);
+                return (`<strong>${d.state}</strong><br>${xlabel} ${d[theXaxis]}<br>${ylabel} ${d[theYaxis]}`);
             });
 
-        States.call(toolTip);
+        state_lables.call(toolTip);
 
-        States.on("mouseover", function(data) {
+        state_lables.on("mouseover", function(data) {
                 toolTip.show(data);
             })
+        
             .on("mouseout", function(data, index) {
                 toolTip.hide(data);
             });
 
-        return States;
+        return state_lables;
     }
 
 
@@ -421,4 +439,4 @@ function makeResponsive() {
 
 makeResponsive();
 
-svg.select(window).on("resize", makeResponsive)
+d3.select(window).on("resize", makeResponsive);
